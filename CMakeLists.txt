@@ -24,7 +24,11 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
 )
 
-file(GLOB SOURCE "src/ORB16.cc")
+set(SOURCE
+src/ORB16.cc
+src/fast16.cc
+src/fast16_score.cc
+    )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
