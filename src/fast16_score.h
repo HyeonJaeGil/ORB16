@@ -1,5 +1,5 @@
-/* This is FAST corner detector, contributed to OpenCV by the author, Edward Rosten.
-   Below is the original copyright and the references */
+/* This is FAST corner detector, contributed to OpenCV by the author, Edward
+   Rosten. Below is the original copyright and the references */
 
 /*
 Copyright (c) 2006, 2008 Edward Rosten
@@ -48,23 +48,18 @@ The references are:
 
 #include "opencv2/features2d.hpp"
 #include "opencv2/imgproc.hpp"
-
 #include "opencv2/core/utility.hpp"
-// #include "opencv2/core/private.hpp"
-#include "opencv2/core/ocl.hpp"
-#include "opencv2/core/hal/hal.hpp"
 
 #include <algorithm>
 
-namespace cv
-{
+namespace cv {
 
 void makeOffsets(int pixel[25], int row_stride, int patternSize);
 
-template<int patternSize>
-int cornerScore(const ushort* ptr, const int pixel[], int threshold);
+template <int patternSize>
+int cornerScore(const ushort *ptr, const int pixel[], int threshold);
 
-}
+} // namespace cv
 
 #endif
 #endif

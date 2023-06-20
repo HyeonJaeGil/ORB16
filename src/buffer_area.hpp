@@ -5,7 +5,6 @@
 #define OPENCV_UTILS_BUFFER_AREA_HPP
 
 #include <opencv2/core/base.hpp>
-// #include <opencv2/core/private.hpp>
 #include <opencv2/core/utility.hpp>
 #include <vector>
 

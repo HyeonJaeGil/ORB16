@@ -570,12 +570,6 @@ computeKeyPoints(const Mat &imagePyramid, const UMat &uimagePyramid,
                  std::vector<KeyPoint> &allKeypoints, int nfeatures,
                  double scaleFactor, int edgeThreshold, int patchSize,
                  ORB16::ScoreType scoreType, bool useOCL, int fastThreshold) {
-#ifndef HAVE_OPENCL
-  CV_UNUSED(uimagePyramid);
-  CV_UNUSED(ulayerInfo);
-  CV_UNUSED(useOCL);
-#endif
-
   int i, nkeypoints, level, nlevels = (int)layerInfo.size();
   std::vector<int> nfeaturesPerLevel(nlevels);
 
@@ -663,22 +657,7 @@ computeKeyPoints(const Mat &imagePyramid, const UMat &uimagePyramid,
 
   // Select best features using the Harris cornerness (better scoring than FAST)
   if (scoreType == ORB16::HARRIS_SCORE) {
-#ifdef HAVE_OPENCL
-    if (useOCL) {
-      uploadORBKeypoints(allKeypoints, ukeypoints_buf, ukeypoints);
-      useOCL = ocl_HarrisResponses(uimagePyramid, ulayerInfo, ukeypoints,
-                                   uresponses, nkeypoints, 7, HARRIS_K);
-      if (useOCL) {
-        CV_IMPL_ADD(CV_IMPL_OCL);
-        uresponses.copyTo(responses);
-        for (i = 0; i < nkeypoints; i++)
-          allKeypoints[i].response = responses.at<float>(i);
-      }
-    }
-
-    if (!useOCL)
-#endif
-      HarrisResponses(imagePyramid, layerInfo, allKeypoints, 7, HARRIS_K);
+    HarrisResponses(imagePyramid, layerInfo, allKeypoints, 7, HARRIS_K);
 
     std::vector<KeyPoint> newAllKeypoints;
     newAllKeypoints.reserve(nfeaturesPerLevel[0] * nlevels);
@@ -703,29 +682,7 @@ computeKeyPoints(const Mat &imagePyramid, const UMat &uimagePyramid,
 
   nkeypoints = (int)allKeypoints.size();
 
-#ifdef HAVE_OPENCL
-  if (useOCL) {
-    UMat uumax;
-    if (useOCL)
-      copyVectorToUMat(umax, uumax);
-
-    uploadORBKeypoints(allKeypoints, ukeypoints_buf, ukeypoints);
-    useOCL = ocl_ICAngles(uimagePyramid, ulayerInfo, ukeypoints, uresponses,
-                          uumax, nkeypoints, halfPatchSize);
-
-    if (useOCL) {
-      CV_IMPL_ADD(CV_IMPL_OCL);
-      uresponses.copyTo(responses);
-      for (i = 0; i < nkeypoints; i++)
-        allKeypoints[i].angle = responses.at<float>(i);
-    }
-  }
-
-  if (!useOCL)
-#endif
-  {
-    ICAngles(imagePyramid, layerInfo, allKeypoints, umax, halfPatchSize);
-  }
+  ICAngles(imagePyramid, layerInfo, allKeypoints, umax, halfPatchSize);
 
   for (i = 0; i < nkeypoints; i++) {
     float scale = layerScale[allKeypoints[i].octave];
@@ -842,12 +799,7 @@ void ORB16::detectAndCompute(InputArray _image, InputArray _mask,
       std::max(edgeThreshold, std::max(descPatchSize, HARRIS_BLOCK_SIZE / 2)) +
       1;
 
-#ifdef HAVE_OPENCL
-  bool useOCL = ocl::isOpenCLActivated() &&
-                OCL_FORCE_CHECK(_image.isUMat() || _descriptors.isUMat());
-#else
   bool useOCL = false;
-#endif
 
   Mat image = _image.getMat(), mask = _mask.getMat();
   if (image.type() >= 16 && image.type() < 24) // is color image
@@ -1032,30 +984,9 @@ void ORB16::detectAndCompute(InputArray _image, InputArray _mask,
                    BORDER_REFLECT_101);
     }
 
-#ifdef HAVE_OPENCL
-    if (useOCL) {
-      imagePyramid.copyTo(uimagePyramid);
-      std::vector<Vec4i> kptbuf;
-      UMat ukeypoints, upattern;
-      copyVectorToUMat(pattern, upattern);
-      uploadORBKeypoints(keypoints, layerScale, kptbuf, ukeypoints);
-
-      UMat udescriptors = _descriptors.getUMat();
-      useOCL = ocl_computeOrbDescriptors(uimagePyramid, ulayerInfo, ukeypoints,
-                                         udescriptors, upattern, nkeypoints,
-                                         dsize, wta_k);
-      if (useOCL) {
-        CV_IMPL_ADD(CV_IMPL_OCL);
-      }
-    }
-
-    if (!useOCL)
-#endif
-    {
-      Mat descriptors = _descriptors.getMat();
-      computeOrbDescriptors(imagePyramid, layerInfo, layerScale, keypoints,
-                            descriptors, pattern, dsize, wta_k);
-    }
+    Mat descriptors = _descriptors.getMat();
+    computeOrbDescriptors(imagePyramid, layerInfo, layerScale, keypoints,
+                          descriptors, pattern, dsize, wta_k);
   }
 }
 
