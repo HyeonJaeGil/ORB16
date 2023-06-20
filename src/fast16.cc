@@ -3,6 +3,8 @@
 #include <iostream>
 #include "buffer_area.hpp"
 
+#define MAX16 65535
+
 namespace cv {
 
 template<int patternSize>
@@ -11,7 +13,7 @@ void FAST_t(InputArray _img, std::vector<KeyPoint>& keypoints, int threshold, bo
     Mat img = _img.getMat();
     const int K = patternSize/2, N = patternSize + K + 1;
     int i, j, k, pixel[25];
-    makeOffsets(pixel, (int)img.step, patternSize);
+    makeOffsets(pixel, (int)(img.step/2), patternSize); // make stride the same as img.cols
 
 #if CV_SIMD128
     const int quarterPatternSize = patternSize/4;
@@ -26,11 +28,16 @@ void FAST_t(InputArray _img, std::vector<KeyPoint>& keypoints, int threshold, bo
 
     keypoints.clear();
 
-    threshold = std::min(std::max(threshold, 0), 255);
+    threshold = std::min(std::max(threshold, 0), MAX16);
 
-    uchar threshold_tab[512];
-    for( i = -255; i <= 255; i++ )
-        threshold_tab[i+255] = (uchar)(i < -threshold ? 1 : i > threshold ? 2 : 0);
+    uchar threshold_tab[2*(MAX16+1)];
+    for( i = -MAX16; i <= MAX16; i++ )
+    {
+        threshold_tab[i+MAX16] = (uchar)(i < -threshold ? 1 : i > threshold ? 2 : 0);
+        // printf("%d ", threshold_tab[i+MAX16]);
+    }
+    // printf("\n");
+    
 
     uchar* buf[3] = { 0 };
     int* cpbuf[3] = { 0 };
@@ -47,9 +54,15 @@ void FAST_t(InputArray _img, std::vector<KeyPoint>& keypoints, int threshold, bo
         memset(buf[idx], 0, img.cols);
     }
 
-    for(i = 3; i < img.rows-2; i++)
+    for(i = 3; i < img.rows-2; i++) // for each row (the first 3 rows are skipped)
     {
-        const uchar* ptr = img.ptr<uchar>(i) + 3;
+        const ushort* ptr = img.ptr<ushort>(i) + 3; // i-th row array, starting from the 4th column
+        // // print each element of ptr
+        // for (int i = 0; i < img.cols; i++)
+        // {
+        //     std::cout << (int)ptr[i] << " ";
+        // }
+        // std::cout << std::endl;
         uchar* curr = buf[(i - 3)%3];
         int* cornerpos = cpbuf[(i - 3)%3] + 1; // cornerpos[-1] is used to store a value
         memset(curr, 0, img.cols);
@@ -57,7 +70,7 @@ void FAST_t(InputArray _img, std::vector<KeyPoint>& keypoints, int threshold, bo
 
         if( i < img.rows - 3 )
         {
-            j = 3;
+            j = 3; // always start from 4th column of each row
 #if CV_SIMD128
             {
                 if( patternSize == 16 )
@@ -153,7 +166,10 @@ void FAST_t(InputArray _img, std::vector<KeyPoint>& keypoints, int threshold, bo
             for( ; j < img.cols - 3; j++, ptr++ )
             {
                 int v = ptr[0];
-                const uchar* tab = &threshold_tab[0] - v + 255;
+                const uchar* tab = &threshold_tab[0] - v + MAX16;
+                for (int i=0 ; i < 16 ; ++i){
+                    // printf("pixel[%d]: %d, ptr[pixel[%d]]: %d\n", i, pixel[i], i, ptr[pixel[i]]);
+                }
                 int d = tab[ptr[pixel[0]]] | tab[ptr[pixel[8]]];
 
                 if( d == 0 )
@@ -277,12 +293,17 @@ void FastFeatureDetector16::detect(InputArray _image,
   Mat mask = _mask.getMat(), grayImage;
   UMat ugrayImage;
   _InputArray gray = _image;
-//   if (_image.type() != CV_8U) {
-//     _OutputArray ogray =
-//         _image.isUMat() ? _OutputArray(ugrayImage) : _OutputArray(grayImage);
-//     cvtColor(_image, ogray, COLOR_BGR2GRAY);
-//     gray = ogray;
-//   }
+
+    // if image type is not 16 bit unsigned, return error
+    if (_image.type() % 8 != 2) {
+        CV_Error(Error::StsBadArg, "image type must be 16 bit");
+    }
+
+    if (_image.type() != CV_16UC1) {
+        _image.getMat().convertTo(grayImage, CV_16UC1);
+        gray = grayImage;
+    }
+
   FAST(gray, keypoints, threshold, nonmaxSuppression, type);
   KeyPointsFilter::runByPixelsMask(keypoints, mask);
 }

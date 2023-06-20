@@ -81,7 +81,7 @@ void makeOffsets(int pixel[25], int rowStride, int patternSize)
 }
 
 #if VERIFY_CORNERS
-static void testCorner(const uchar* ptr, const int pixel[], int K, int N, int threshold) {
+static void testCorner(const ushort* ptr, const int pixel[], int K, int N, int threshold) {
     // check that with the computed "threshold" the pixel is still a corner
     // and that with the increased-by-1 "threshold" the pixel is not a corner anymore
     for( int delta = 0; delta <= 1; delta++ )
@@ -117,7 +117,7 @@ static void testCorner(const uchar* ptr, const int pixel[], int K, int N, int th
 #endif
 
 template<>
-int cornerScore<16>(const uchar* ptr, const int pixel[], int threshold)
+int cornerScore<16>(const ushort* ptr, const int pixel[], int threshold)
 {
     const int K = 8, N = K*3 + 1;
     int k, v = ptr[0];
@@ -210,7 +210,7 @@ int cornerScore<16>(const uchar* ptr, const int pixel[], int threshold)
 }
 
 template<>
-int cornerScore<12>(const uchar* ptr, const int pixel[], int threshold)
+int cornerScore<12>(const ushort* ptr, const int pixel[], int threshold)
 {
     const int K = 6, N = K*3 + 1;
     int k, v = ptr[0];
@@ -295,7 +295,7 @@ int cornerScore<12>(const uchar* ptr, const int pixel[], int threshold)
 }
 
 template<>
-int cornerScore<8>(const uchar* ptr, const int pixel[], int threshold)
+int cornerScore<8>(const ushort* ptr, const int pixel[], int threshold)
 {
     const int K = 4, N = K * 3 + 1;
     int k, v = ptr[0];
