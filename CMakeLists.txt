@@ -35,3 +35,6 @@ target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
 add_executable(test_ORB16 src/test_ORB16.cc)
 target_link_libraries(test_ORB16 ${PROJECT_NAME})
+
+add_executable(test_fast16 src/test_fast16.cc)
+target_link_libraries(test_fast16 ${PROJECT_NAME})
