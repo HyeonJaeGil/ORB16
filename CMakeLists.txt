@@ -38,3 +38,6 @@ target_link_libraries(test_ORB16 ${PROJECT_NAME})
 
 add_executable(test_fast16 src/test_fast16.cc)
 target_link_libraries(test_fast16 ${PROJECT_NAME})
+
+add_executable(test_detection src/test_detection.cc)
+target_link_libraries(test_detection ${PROJECT_NAME})
