@@ -850,9 +850,8 @@ void ORB16::detectAndCompute(InputArray _image, InputArray _mask,
 #endif
 
   Mat image = _image.getMat(), mask = _mask.getMat();
-  std::cerr << "imge type: " << typeToString(image.type()) << std::endl;
-  // if (image.type() != CV_8UC1)
-  //   cvtColor(_image, image, COLOR_BGR2GRAY);
+  if (image.type() >= 16 && image.type() < 24) // is color image
+    cvtColor(image, image, COLOR_BGR2GRAY);
 
   int i, level, nLevels = this->nlevels, nkeypoints = (int)keypoints.size();
   bool sortedByLevel = true;
