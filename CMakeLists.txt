@@ -41,3 +41,5 @@ target_link_libraries(test_fast16 ${PROJECT_NAME})
 
 add_executable(test_detection src/test_detection.cc)
 target_link_libraries(test_detection ${PROJECT_NAME})
+
+add_subdirectory(pybind11)
