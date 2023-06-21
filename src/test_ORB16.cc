@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   img.convertTo(img8, CV_8UC1, 255.0 / (max - min), -min * 255.0 / (max - min));
 
   // detect orb 16bit
-  auto orb16 = ORB16::create(500, 1.2f, 8, 31, 0, 2, ORB16::HARRIS_SCORE, 31, 40);
+  auto orb16 = ORB16::create(500, 1.2f, 8, 31, 0, 2, ORB16::HARRIS_SCORE, 31, 20);
   std::vector<KeyPoint> keypoints_16;
   orb16->detect(img, keypoints_16);
   std::cout << "keypoints_16 size: " << keypoints_16.size() << std::endl;

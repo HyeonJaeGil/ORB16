@@ -1,4 +1,5 @@
 #include "ORB16.h"
+#include "fast16.h"
 #include <iostream>
 
 using std::vector;
@@ -56,6 +57,61 @@ static void HarrisResponses(const Mat &img, const std::vector<Rect> &layerinfo,
 
     for (int k = 0; k < blockSize * blockSize; k++) {
       const uchar *ptr = ptr0 + ofs[k];
+      int Ix = (ptr[1] - ptr[-1]) * 2 + (ptr[-step + 1] - ptr[-step - 1]) +
+               (ptr[step + 1] - ptr[step - 1]);
+      int Iy = (ptr[step] - ptr[-step]) * 2 + (ptr[step - 1] - ptr[-step - 1]) +
+               (ptr[step + 1] - ptr[-step + 1]);
+      a += Ix * Ix;
+      b += Iy * Iy;
+      c += Ix * Iy;
+    }
+    pts[ptidx].response = ((float)a * b - (float)c * c -
+                           harris_k * ((float)a + b) * ((float)a + b)) *
+                          scale_sq_sq;
+  }
+}
+
+/**
+ * @brief Harris Corner Response for 16-bit images
+ */
+static void HarrisResponses16(const Mat &img,
+                              const std::vector<Rect> &layerinfo,
+                              std::vector<KeyPoint> &pts, int blockSize,
+                              float harris_k) {
+  CV_CheckTypeEQ(img.type(), CV_16UC1, "");
+  CV_CheckGT(blockSize, 0, "");
+  CV_CheckLE(blockSize * blockSize, 2048, "");
+
+  size_t ptidx, ptsize = pts.size();
+
+  const ushort *ptr00 = img.ptr<ushort>();
+  size_t size_t_step = img.step / 2;
+  CV_CheckLE(size_t_step * blockSize + blockSize + 1, (size_t)INT_MAX,
+             ""); // ofs computation, step+1
+  int step = static_cast<int>(size_t_step);
+
+  int r = blockSize / 2;
+
+  float scale = 1.f / ((1 << 2) * blockSize * 255.f);
+  float scale_sq_sq = scale * scale * scale * scale;
+
+  AutoBuffer<int> ofsbuf(blockSize * blockSize);
+  int *ofs = ofsbuf.data();
+  for (int i = 0; i < blockSize; i++)
+    for (int j = 0; j < blockSize; j++)
+      ofs[i * blockSize + j] = (int)(i * step + j);
+
+  for (ptidx = 0; ptidx < ptsize; ptidx++) {
+    int x0 = cvRound(pts[ptidx].pt.x);
+    int y0 = cvRound(pts[ptidx].pt.y);
+    int z = pts[ptidx].octave;
+
+    const ushort *ptr0 = ptr00 + (y0 - r + layerinfo[z].y) * size_t_step +
+                         (x0 - r + layerinfo[z].x);
+    int a = 0, b = 0, c = 0;
+
+    for (int k = 0; k < blockSize * blockSize; k++) {
+      const ushort *ptr = ptr0 + ofs[k];
       int Ix = (ptr[1] - ptr[-1]) * 2 + (ptr[-step + 1] - ptr[-step - 1]) +
                (ptr[step + 1] - ptr[step - 1]);
       int Iy = (ptr[step] - ptr[-step]) * 2 + (ptr[step - 1] - ptr[-step - 1]) +
@@ -619,10 +675,16 @@ computeKeyPoints(const Mat &imagePyramid, const UMat &uimagePyramid,
     Mat mask = maskPyramid.empty() ? Mat() : maskPyramid(layerInfo[level]);
 
     // Detect FAST features, 20 is a good threshold
-    {
+    if (imagePyramid.type() == CV_8UC1) {
       Ptr<FastFeatureDetector> fd =
           FastFeatureDetector::create(fastThreshold, true);
       fd->detect(img, keypoints, mask);
+    } else if (imagePyramid.type() == CV_16UC1) {
+      Ptr<FastFeatureDetector16> fd =
+          FastFeatureDetector16::create(fastThreshold, true);
+      fd->detect(img, keypoints, mask);
+    } else {
+      CV_Error(Error::StsUnsupportedFormat, "Unsupported image format");
     }
 
     // Remove keypoints very close to the border
@@ -657,7 +719,12 @@ computeKeyPoints(const Mat &imagePyramid, const UMat &uimagePyramid,
 
   // Select best features using the Harris cornerness (better scoring than FAST)
   if (scoreType == ORB16::HARRIS_SCORE) {
-    HarrisResponses(imagePyramid, layerInfo, allKeypoints, 7, HARRIS_K);
+    if (imagePyramid.type() == CV_8UC1)
+      HarrisResponses(imagePyramid, layerInfo, allKeypoints, 7, HARRIS_K);
+    else if (imagePyramid.type() == CV_16UC1)
+      HarrisResponses16(imagePyramid, layerInfo, allKeypoints, 7, HARRIS_K);
+    else
+      CV_Error(Error::StsUnsupportedFormat, "Image format not supported");
 
     std::vector<KeyPoint> newAllKeypoints;
     newAllKeypoints.reserve(nfeaturesPerLevel[0] * nlevels);
@@ -865,7 +932,12 @@ void ORB16::detectAndCompute(InputArray _image, InputArray _mask,
   }
   bufSize.height = level_ofs.y + level_dy;
 
-  imagePyramid.create(bufSize, CV_8U);
+  if (image.type() == CV_8UC1)
+    imagePyramid.create(bufSize, CV_8U);
+  else if (image.type() == CV_16UC1)
+    imagePyramid.create(bufSize, CV_16U);
+  else
+    CV_Error(Error::StsUnsupportedFormat, "image type must be 8uC1 or 16uC1");
   if (!mask.empty())
     maskPyramid.create(bufSize, CV_8U);
 
@@ -900,7 +972,7 @@ void ORB16::detectAndCompute(InputArray _image, InputArray _mask,
       if (!mask.empty())
         copyMakeBorder(currMask, extMask, border, border, border, border,
                        BORDER_CONSTANT + BORDER_ISOLATED);
-    } else {
+    } else { // level == firstLevel
       copyMakeBorder(image, extImg, border, border, border, border,
                      BORDER_REFLECT_101);
       if (!mask.empty())
@@ -926,7 +998,7 @@ void ORB16::detectAndCompute(InputArray _image, InputArray _mask,
                      ulayerInfo, layerScale, keypoints, nfeatures, scaleFactor,
                      edgeThreshold, patchSize, scoreType, useOCL,
                      fastThreshold);
-  } else {
+  } else { // !do_keypoints
     KeyPointsFilter::runByImageBorder(keypoints, image.size(), edgeThreshold);
 
     if (!sortedByLevel) {
