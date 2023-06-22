@@ -43,3 +43,5 @@ add_executable(test_detection src/test_detection.cc)
 target_link_libraries(test_detection ${PROJECT_NAME})
 
 add_subdirectory(pybind11)
+pybind11_add_module(pyORB16 src/pyORB16.cc)
+target_link_libraries(pyORB16 PRIVATE ${PROJECT_NAME} ${OpenCV_LIBS})

@@ -1,3 +1,5 @@
 build/
 .vscode/
 pybind11/
+*.egg-info/
+*.so
