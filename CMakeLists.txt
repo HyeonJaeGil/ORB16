@@ -33,15 +33,20 @@ src/fast16_score.cc
 add_library(${PROJECT_NAME} SHARED ${SOURCE})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
-add_executable(test_ORB16 src/test_ORB16.cc)
-target_link_libraries(test_ORB16 ${PROJECT_NAME})
+option(BUILD_TEST "Build test" ON)
+option(BUILD_PYTHON "Build pybind" OFF)
 
-add_executable(test_fast16 src/test_fast16.cc)
-target_link_libraries(test_fast16 ${PROJECT_NAME})
+IF(BUILD_TEST)
+    add_executable(test_ORB16 src/test_ORB16.cc)
+    target_link_libraries(test_ORB16 ${PROJECT_NAME})
 
-add_executable(test_detection src/test_detection.cc)
-target_link_libraries(test_detection ${PROJECT_NAME})
+    add_executable(test_fast16 src/test_fast16.cc)
+    target_link_libraries(test_fast16 ${PROJECT_NAME})
 
-add_subdirectory(pybind11)
-pybind11_add_module(pyORB16 src/pyORB16.cc)
-target_link_libraries(pyORB16 PRIVATE ${PROJECT_NAME} ${OpenCV_LIBS})
+    add_executable(test_detection src/test_detection.cc)
+    target_link_libraries(test_detection ${PROJECT_NAME})
+ENDIF(BUILD_TEST)
+
+IF(BUILD_PYTHON)
+    add_subdirectory(python)
+ENDIF(BUILD_PYTHON)

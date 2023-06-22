@@ -117,9 +117,9 @@ def test_kpts_conversion(pyorb_kpts):
 if __name__ == "__main__":
     ## test pyORB16 (16-bit version)
     img16 = cv2.imread("assets/tir.png", -1)
-    img16_normalized = normalize_minmax(img16)
+    img8 = normalize_minmax(img16)
     mask16 = np.zeros(img16.shape, dtype=np.uint8)
-    orb16 = pyORB16.ORB16_create(nfeatures=2000)
+    orb16 = pyORB16.ORB16_create(nfeatures=2000, fastThreshold=40)
 
     test_detect_and_compute(orb16, img16, mask=mask16)
     kpts, descs = test_detect_and_compute(orb16, img16, mask=None)
@@ -130,18 +130,8 @@ if __name__ == "__main__":
     test_compute(orb16, img16, kpts[0:10])
     test_compute(orb16, img16, [])
 
-    # optional: draw keypoints
-    def drawKeypoints(img, kpts):
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        img = cv2.drawKeypoints(img, kpts, 1, color=(0, 255, 0), flags=0)
-        return img
-    cv2_kpts = pyorb_kpts_to_cv2_kpts(kpts)
-    img16_kpts = drawKeypoints(img16_normalized, cv2_kpts)
-    cv2.imshow("img16_kpts", img16_kpts)
-    cv2.waitKey(0)
 
     ## test cv2.ORB (reference)
-    img8 = cv2.imread("assets/lena.png", 0)
     mask8 = np.zeros(img8.shape, dtype=np.uint8)
     orb8 = cv2.ORB_create(nfeatures=2000)
 
@@ -152,4 +142,46 @@ if __name__ == "__main__":
     kpts = test_detect(orb8, img8, mask=None)
     test_compute(orb8, img8, kpts)
     test_compute(orb8, img8, [])
+
+    # optional: draw keypoints
+    def drawKeypoints(img, kpts):
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        img = cv2.drawKeypoints(img, kpts, 1, color=(0, 255, 0), flags=0)
+        return img
+
+    def getText(bits, feature_num=None, fast_thr=None):
+        text = str(bits) + "-bit"
+        if feature_num is not None:
+            text += ", " + str(feature_num) + " features"
+        if fast_thr is not None:
+            text += ", fastThr=" + str(fast_thr)
+        return text
+
+    orb16_20 = pyORB16.ORB16_create(nfeatures=2000, fastThreshold=20)
+    orb16_40 = pyORB16.ORB16_create(nfeatures=2000, fastThreshold=40)
+    orb8_20 = cv2.ORB_create(nfeatures=2000, fastThreshold=20)
+
+    kpts16_20 = orb16_20.detect(img16, None)
+    cv2_kpts16_20 = pyorb_kpts_to_cv2_kpts(kpts16_20)
+    kpts16_20_num = len(kpts16_20)
+    img16_20_kpts = drawKeypoints(img8, cv2_kpts16_20)
+    cv2.putText(img16_20_kpts, getText(16, kpts16_20_num, 20), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+    kpts16_40 = orb16_40.detect(img16, None)
+    cv2_kpts16_40 = pyorb_kpts_to_cv2_kpts(kpts16_40)
+    kpts16_40_num = len(kpts16_40)
+    img16_40_kpts = drawKeypoints(img8, cv2_kpts16_40)
+    cv2.putText(img16_40_kpts, getText(16, kpts16_40_num, 40), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+    kpts8 = orb8.detect(img8, None)
+    kpts8_num = len(kpts8)
+    img8_kpts = drawKeypoints(img8, kpts8)
+    cv2.putText(img8_kpts, getText(8, kpts8_num), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+    concat = cv2.hconcat([img16_20_kpts, img16_40_kpts, img8_kpts])
+    cv2.imshow("keypoints", concat)
+    cv2.imwrite("assets/keypoints.png", concat)
+
+    cv2.waitKey(0)
+    
 
