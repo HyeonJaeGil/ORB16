@@ -27,7 +27,6 @@ include_directories(
 set(SOURCE
 src/ORB16.cc
 src/fast16.cc
-src/fast16_score.cc
     )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE})
