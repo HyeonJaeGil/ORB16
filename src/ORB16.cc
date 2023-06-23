@@ -167,7 +167,7 @@ static void computeOrbDescriptors(const Mat &imagePyramid,
                                   Mat &descriptors,
                                   const std::vector<Point> &_pattern, int dsize,
                                   int wta_k) {
-  int step = (int)imagePyramid.step;
+  int step = (int)(imagePyramid.step / 2);
   int j, i, nkeypoints = (int)keypoints.size();
 
   for (j = 0; j < nkeypoints; j++) {
@@ -179,8 +179,8 @@ static void computeOrbDescriptors(const Mat &imagePyramid,
     angle *= (float)(CV_PI / 180.f);
     float a = (float)cos(angle), b = (float)sin(angle);
 
-    const uchar *center =
-        &imagePyramid.at<uchar>(cvRound(kpt.pt.y * scale) + layer.y,
+    const ushort *center =
+        &imagePyramid.at<ushort>(cvRound(kpt.pt.y * scale) + layer.y,
                                 cvRound(kpt.pt.x * scale) + layer.x);
     float x, y;
     int ix, iy;
