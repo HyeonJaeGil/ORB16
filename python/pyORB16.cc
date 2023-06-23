@@ -1,3 +1,4 @@
+#include "fast16.h"
 #include "ORB16.h"
 #include <opencv2/opencv.hpp>
 #include <pybind11/numpy.h>
@@ -74,6 +75,13 @@ cv::ORB16 ORB16_create(int nfeatures = 500, float scaleFactor = 1.2f, int nlevel
                        int patchSize = 31, int fastThreshold = 20) {
   return cv::ORB16(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K, scoreType,
                    patchSize, fastThreshold);
+}
+
+cv::FastFeatureDetector16
+FastFeatureDetector16_create(int threshold, bool nonmaxSuppression,
+                             cv::FastFeatureDetector16::DetectorType type) {
+  return cv::FastFeatureDetector16(threshold, nonmaxSuppression,
+                                   (cv::FastFeatureDetector16::DetectorType)type);
 }
 
 PYBIND11_MODULE(pyORB16, m) {
@@ -165,4 +173,40 @@ PYBIND11_MODULE(pyORB16, m) {
         py::arg("nlevels") = 8, py::arg("edgeThreshold") = 31, py::arg("firstLevel") = 0,
         py::arg("WTA_K") = 2, py::arg("scoreType") = cv::ORB16::ScoreType::HARRIS_SCORE,
         py::arg("patchSize") = 31, py::arg("fastThreshold") = 20);
+
+  py::enum_<cv::FastFeatureDetector16::DetectorType>(m, "DetectorType")
+      .value("TYPE_5_8", cv::FastFeatureDetector16::DetectorType::TYPE_5_8)
+      .value("TYPE_7_12", cv::FastFeatureDetector16::DetectorType::TYPE_7_12)
+      .value("TYPE_9_16", cv::FastFeatureDetector16::DetectorType::TYPE_9_16)
+      .export_values();
+
+  py::class_<cv::FastFeatureDetector16>(m, "FastFeatureDetector16")
+      .def(py::init<int, bool, cv::FastFeatureDetector16::DetectorType>(),
+           py::arg("threshold") = 10, py::arg("nonmaxSuppression") = true,
+           py::arg("type") = cv::FastFeatureDetector16::DetectorType::TYPE_9_16)
+      .def("getThreshold", &cv::FastFeatureDetector16::getThreshold)
+      .def("setThreshold", &cv::FastFeatureDetector16::setThreshold, py::arg("threshold"))
+      .def("getNonmaxSuppression", &cv::FastFeatureDetector16::getNonmaxSuppression)
+      .def("setNonmaxSuppression", &cv::FastFeatureDetector16::setNonmaxSuppression,
+           py::arg("nonmaxSuppression"))
+      .def("getType", &cv::FastFeatureDetector16::getType)
+      .def("setType", &cv::FastFeatureDetector16::setType, py::arg("type"))
+      .def(
+          "detect",
+          [](cv::FastFeatureDetector16 &self, py::array_t<uint16_t> py_array,
+             py::object py_mask = py::none()) {
+            std::vector<cv::KeyPoint> keypoints;
+            cv::Mat image = toMat<uint16_t>(py_array);
+            cv::Mat mask = py::isinstance<py::none>(py_mask) ?
+                               cv::Mat() :
+                               toMat<uint8_t>(py_mask.cast<py::array_t<uint8_t>>());
+            self.detect(image, keypoints, mask);
+            return keypoints;
+          },
+          py::arg("image"), py::arg("mask") = py::none());
+
+  m.def("FastFeatureDetector16_create", &FastFeatureDetector16_create, py::arg("threshold") = 10,
+        py::arg("nonmaxSuppression") = true,
+        py::arg("type") = cv::FastFeatureDetector16::DetectorType::TYPE_9_16);
+
 }
