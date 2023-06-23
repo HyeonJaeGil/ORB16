@@ -3,10 +3,10 @@
 
 ![alt text](assets/keypoints.png)
 
-This repository is a wrapper for well-known feature extractor, ORB, to make it use of **16-bit image**.
-Unlike normal RGB 8-bit image, TIR (Thermal-Infrared) image contains 14-bit information.
-It has been a practice to convert (normalize) TIR image into 8-bit, and then apply traditional 8-bit feature extractor to it.
-But we argue that it can be better to **detect and describe features from raw 14-bit image**. 
+This repository is a wrapper for well-known feature extractor, ORB, to make it use of **16-bit image**.\
+Unlike normal RGB 8-bit image, TIR (Thermal-Infrared) image contains 14-bit information.\
+It has been a practice to convert (normalize) TIR image into 8-bit, and then apply traditional 8-bit feature extractor to it.\
+But we argue that it can be better to **detect and describe features from raw 14-bit image**. \
 Advantages of using raw 14-bit image is ...
 1.  preserve raw intensity information
 2.  make image irrelevent to the normalization method
