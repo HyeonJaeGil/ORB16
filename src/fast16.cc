@@ -8,22 +8,19 @@
 namespace cv {
 
 void makeOffsets(int pixel[25], int rowStride, int patternSize) {
-  static const int offsets16[][2] = {{0, 3},  {1, 3},   {2, 2},   {3, 1},
-                                     {3, 0},  {3, -1},  {2, -2},  {1, -3},
-                                     {0, -3}, {-1, -3}, {-2, -2}, {-3, -1},
-                                     {-3, 0}, {-3, 1},  {-2, 2},  {-1, 3}};
+  static const int offsets16[][2] = {{0, 3},  {1, 3},  {2, 2},  {3, 1},   {3, 0},   {3, -1},
+                                     {2, -2}, {1, -3}, {0, -3}, {-1, -3}, {-2, -2}, {-3, -1},
+                                     {-3, 0}, {-3, 1}, {-2, 2}, {-1, 3}};
 
-  static const int offsets12[][2] = {{0, 2},   {1, 2},  {2, 1},  {2, 0},
-                                     {2, -1},  {1, -2}, {0, -2}, {-1, -2},
-                                     {-2, -1}, {-2, 0}, {-2, 1}, {-1, 2}};
+  static const int offsets12[][2] = {{0, 2},  {1, 2},   {2, 1},   {2, 0},  {2, -1}, {1, -2},
+                                     {0, -2}, {-1, -2}, {-2, -1}, {-2, 0}, {-2, 1}, {-1, 2}};
 
   static const int offsets8[][2] = {{0, 1},  {1, 1},   {1, 0},  {1, -1},
                                     {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}};
 
-  const int(*offsets)[2] =
-      patternSize == 16
-          ? offsets16
-          : patternSize == 12 ? offsets12 : patternSize == 8 ? offsets8 : 0;
+  const int(*offsets)[2] = patternSize == 16 ?
+                               offsets16 :
+                               patternSize == 12 ? offsets12 : patternSize == 8 ? offsets8 : 0;
 
   CV_Assert(pixel && offsets);
 
@@ -35,8 +32,7 @@ void makeOffsets(int pixel[25], int rowStride, int patternSize) {
 }
 
 #if VERIFY_CORNERS
-static void testCorner(const ushort *ptr, const int pixel[], int K, int N,
-                       int threshold) {
+static void testCorner(const ushort *ptr, const int pixel[], int K, int N, int threshold) {
   // check that with the computed "threshold" the pixel is still a corner
   // and that with the increased-by-1 "threshold" the pixel is not a corner
   // anymore
@@ -59,17 +55,14 @@ static void testCorner(const ushort *ptr, const int pixel[], int K, int N,
         c0 = c1 = 0;
       }
     }
-    CV_Assert((delta == 0 && std::max(c0, c1) > K) ||
-              (delta == 1 && std::max(c0, c1) <= K));
+    CV_Assert((delta == 0 && std::max(c0, c1) > K) || (delta == 1 && std::max(c0, c1) <= K));
   }
 }
 #endif
 
-template <int patternSize>
-int cornerScore(const ushort *ptr, const int pixel[], int threshold);
+template <int patternSize> int cornerScore(const ushort *ptr, const int pixel[], int threshold);
 
-template <>
-int cornerScore<16>(const ushort *ptr, const int pixel[], int threshold) {
+template <> int cornerScore<16>(const ushort *ptr, const int pixel[], int threshold) {
   const int K = 8, N = K * 3 + 1;
   int k, v = ptr[0];
   short d[N];
@@ -115,8 +108,7 @@ int cornerScore<16>(const ushort *ptr, const int pixel[], int threshold) {
   return threshold;
 }
 
-template <>
-int cornerScore<12>(const ushort *ptr, const int pixel[], int threshold) {
+template <> int cornerScore<12>(const ushort *ptr, const int pixel[], int threshold) {
   const int K = 6, N = K * 3 + 1;
   int k, v = ptr[0];
   short d[N + 4];
@@ -157,8 +149,7 @@ int cornerScore<12>(const ushort *ptr, const int pixel[], int threshold) {
   return threshold;
 }
 
-template <>
-int cornerScore<8>(const ushort *ptr, const int pixel[], int threshold) {
+template <> int cornerScore<8>(const ushort *ptr, const int pixel[], int threshold) {
   const int K = 4, N = K * 3 + 1;
   int k, v = ptr[0];
   short d[N];
@@ -211,8 +202,7 @@ void FAST_t(InputArray _img, std::vector<KeyPoint> &keypoints, int threshold,
 
   uchar threshold_tab[2 * (MAX16 + 1)];
   for (i = -MAX16; i <= MAX16; i++)
-    threshold_tab[i + MAX16] =
-        (uchar)(i < -threshold ? 1 : i > threshold ? 2 : 0);
+    threshold_tab[i + MAX16] = (uchar)(i < -threshold ? 1 : i > threshold ? 2 : 0);
 
   uchar *buf[3] = {0};
   int *cpbuf[3] = {0};
@@ -227,14 +217,11 @@ void FAST_t(InputArray _img, std::vector<KeyPoint> &keypoints, int threshold,
     memset(buf[idx], 0, img.cols);
   }
 
-  for (i = 3; i < img.rows - 2;
-       i++) // for each row (the first 3 rows are skipped)
+  for (i = 3; i < img.rows - 2; i++) // for each row (the first 3 rows are skipped)
   {
-    const ushort *ptr =
-        img.ptr<ushort>(i) + 3; // i-th row array, starting from the 4th column
+    const ushort *ptr = img.ptr<ushort>(i) + 3; // i-th row array, starting from the 4th column
     uchar *curr = buf[(i - 3) % 3];
-    int *cornerpos =
-        cpbuf[(i - 3) % 3] + 1; // cornerpos[-1] is used to store a value
+    int *cornerpos = cpbuf[(i - 3) % 3] + 1; // cornerpos[-1] is used to store a value
     memset(curr, 0, img.cols);
     int ncorners = 0;
 
@@ -273,8 +260,7 @@ void FAST_t(InputArray _img, std::vector<KeyPoint> &keypoints, int threshold,
               if (++count > K) {
                 cornerpos[ncorners++] = j;
                 if (nonmax_suppression)
-                  curr[j] =
-                      (uchar)cornerScore<patternSize>(ptr, pixel, threshold);
+                  curr[j] = (uchar)cornerScore<patternSize>(ptr, pixel, threshold);
                 break;
               }
             } else
@@ -291,8 +277,7 @@ void FAST_t(InputArray _img, std::vector<KeyPoint> &keypoints, int threshold,
               if (++count > K) {
                 cornerpos[ncorners++] = j;
                 if (nonmax_suppression)
-                  curr[j] =
-                      (uchar)cornerScore<patternSize>(ptr, pixel, threshold);
+                  curr[j] = (uchar)cornerScore<patternSize>(ptr, pixel, threshold);
                 break;
               }
             } else
@@ -309,27 +294,23 @@ void FAST_t(InputArray _img, std::vector<KeyPoint> &keypoints, int threshold,
 
     const uchar *prev = buf[(i - 4 + 3) % 3];
     const uchar *pprev = buf[(i - 5 + 3) % 3];
-    cornerpos =
-        cpbuf[(i - 4 + 3) % 3] + 1; // cornerpos[-1] is used to store a value
+    cornerpos = cpbuf[(i - 4 + 3) % 3] + 1; // cornerpos[-1] is used to store a value
     ncorners = cornerpos[-1];
 
     for (k = 0; k < ncorners; k++) {
       j = cornerpos[k];
       int score = prev[j];
       if (!nonmax_suppression ||
-          (score > prev[j + 1] && score > prev[j - 1] && score > pprev[j - 1] &&
-           score > pprev[j] && score > pprev[j + 1] && score > curr[j - 1] &&
-           score > curr[j] && score > curr[j + 1])) {
-        keypoints.push_back(
-            KeyPoint((float)j, (float)(i - 1), 7.f, -1, (float)score));
+          (score > prev[j + 1] && score > prev[j - 1] && score > pprev[j - 1] && score > pprev[j] &&
+           score > pprev[j + 1] && score > curr[j - 1] && score > curr[j] && score > curr[j + 1])) {
+        keypoints.push_back(KeyPoint((float)j, (float)(i - 1), 7.f, -1, (float)score));
       }
     }
   }
 }
 
-void FastFeatureDetector16::FAST(InputArray _img,
-                                 std::vector<KeyPoint> &keypoints,
-                                 int threshold, bool nonmax_suppression,
+void FastFeatureDetector16::FAST(InputArray _img, std::vector<KeyPoint> &keypoints, int threshold,
+                                 bool nonmax_suppression,
                                  FastFeatureDetector16::DetectorType type) {
   switch (type) {
   case FastFeatureDetector16::DetectorType::TYPE_5_8:
@@ -344,15 +325,13 @@ void FastFeatureDetector16::FAST(InputArray _img,
   }
 }
 
-void FastFeatureDetector16::FAST(InputArray _img,
-                                 std::vector<KeyPoint> &keypoints,
-                                 int threshold, bool nonmax_suppression) {
+void FastFeatureDetector16::FAST(InputArray _img, std::vector<KeyPoint> &keypoints, int threshold,
+                                 bool nonmax_suppression) {
   FAST(_img, keypoints, threshold, nonmax_suppression,
        FastFeatureDetector16::DetectorType::TYPE_9_16);
 }
 
-void FastFeatureDetector16::detect(InputArray _image,
-                                   std::vector<KeyPoint> &keypoints,
+void FastFeatureDetector16::detect(InputArray _image, std::vector<KeyPoint> &keypoints,
                                    InputArray _mask) {
   if (_image.empty()) {
     keypoints.clear();
