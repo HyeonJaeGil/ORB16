@@ -1,5 +1,8 @@
 #pragma once
-#include <opencv2/opencv.hpp>
+#include <algorithm>
+#include <opencv2/core.hpp>
+#include <opencv2/features2d.hpp>
+#include <opencv2/imgproc.hpp>
 
 namespace cv {
 
@@ -14,7 +17,6 @@ according to the measured orientation).
  */
 class ORB16 {
 public:
-
   enum ScoreType { HARRIS_SCORE = 0, FAST_SCORE = 1 };
   static const int kBytes = 32;
 
@@ -56,24 +58,20 @@ public:
   feature will be larger.
   @param fastThreshold the fast threshold
    */
-  explicit ORB16(int _nfeatures, float _scaleFactor, int _nlevels,
-                 int _edgeThreshold, int _firstLevel, int _WTA_K,
-                 ORB16::ScoreType _scoreType, int _patchSize,
+  explicit ORB16(int _nfeatures, float _scaleFactor, int _nlevels, int _edgeThreshold,
+                 int _firstLevel, int _WTA_K, ORB16::ScoreType _scoreType, int _patchSize,
                  int _fastThreshold)
       : nfeatures(_nfeatures), scaleFactor(_scaleFactor), nlevels(_nlevels),
         edgeThreshold(_edgeThreshold), firstLevel(_firstLevel), wta_k(_WTA_K),
-        scoreType(_scoreType), patchSize(_patchSize),
-        fastThreshold(_fastThreshold) {}
+        scoreType(_scoreType), patchSize(_patchSize), fastThreshold(_fastThreshold) {}
 
-  static Ptr<ORB16> create(int nfeatures = 500, float scaleFactor = 1.2f,
-                           int nlevels = 8, int edgeThreshold = 31,
-                           int firstLevel = 0, int WTA_K = 2,
-                           ORB16::ScoreType scoreType = ORB16::HARRIS_SCORE,
-                           int patchSize = 31, int fastThreshold = 20) {
+  static Ptr<ORB16> create(int nfeatures = 500, float scaleFactor = 1.2f, int nlevels = 8,
+                           int edgeThreshold = 31, int firstLevel = 0, int WTA_K = 2,
+                           ORB16::ScoreType scoreType = ORB16::HARRIS_SCORE, int patchSize = 31,
+                           int fastThreshold = 20) {
     CV_Assert(firstLevel >= 0);
-    return makePtr<ORB16>(nfeatures, scaleFactor, nlevels, edgeThreshold,
-                             firstLevel, WTA_K, scoreType, patchSize,
-                             fastThreshold);
+    return makePtr<ORB16>(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K,
+                          scoreType, patchSize, fastThreshold);
   }
 
   void setMaxFeatures(int maxFeatures) { nfeatures = maxFeatures; }
@@ -159,8 +157,7 @@ public:
   descriptors[i] are descriptors computed for a keypoints[i]. Row j is the
   keypoints (or keypoints[i]) is the descriptor for keypoint j-th keypoint.
    */
-  virtual void compute(InputArray image,
-                       CV_OUT CV_IN_OUT std::vector<KeyPoint> &keypoints,
+  virtual void compute(InputArray image, CV_OUT CV_IN_OUT std::vector<KeyPoint> &keypoints,
                        OutputArray descriptors);
 
   /** @overload
@@ -174,15 +171,13 @@ public:
   descriptors[i] are descriptors computed for a keypoints[i]. Row j is the
   keypoints (or keypoints[i]) is the descriptor for keypoint j-th keypoint.
   */
-  virtual void
-  compute(InputArrayOfArrays images,
-          CV_OUT CV_IN_OUT std::vector<std::vector<KeyPoint>> &keypoints,
-          OutputArrayOfArrays descriptors);
+  virtual void compute(InputArrayOfArrays images,
+                       CV_OUT CV_IN_OUT std::vector<std::vector<KeyPoint>> &keypoints,
+                       OutputArrayOfArrays descriptors);
 
   /** Detects keypoints and computes the descriptors */
   virtual void detectAndCompute(InputArray image, InputArray mask,
-                                CV_OUT std::vector<KeyPoint> &keypoints,
-                                OutputArray descriptors,
+                                CV_OUT std::vector<KeyPoint> &keypoints, OutputArray descriptors,
                                 bool useProvidedKeypoints = false);
 
 protected:
