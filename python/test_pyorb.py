@@ -1,33 +1,7 @@
 import cv2
-import pyORB16
+import cv16
 import numpy as np
-from termcolor import colored, cprint
-
-def zero_length_error(name):
-    return colored("len({}) == 0".format(name), "red")
-
-def nonzero_length_error(name):
-    return colored("len({}) > 0".format(name), "red")
-
-def none_error(name):
-    return colored("{} is None".format(name), "red")
-
-def notnone_error(name):
-    return colored("{} is not None".format(name), "red")
-
-def neq_error(name1, name2):
-    return colored("{} != {}".format(name1, name2), "red")
-
-def noninstance_error(name, type):
-    return colored("{} is not {}".format(name, type), "red")
-
-def normalize_minmax(image):
-    min_value = image.min()
-    max_value = image.max()
-    image = image.astype(float)
-    image = (image - min_value) / (max_value - min_value)
-    image = (image * 255).astype("uint8")
-    return image
+from test_utils import *
     
 def pyorb_kpts_to_cv2_kpts(pyorb_kpts):
     cv2_kpts = []
@@ -43,8 +17,8 @@ def pyorb_kpts_to_cv2_kpts(pyorb_kpts):
 def cv2_kpts_to_pyorb_kpts(cv2_kpts):
     pyorb_kpts = []
     for cv2_kpt in cv2_kpts:
-        pyorb_kpt = pyORB16.KeyPoint()
-        pyorb_kpt.pt = pyORB16.Point2f(cv2_kpt.pt[0], cv2_kpt.pt[1])
+        pyorb_kpt = cv16.KeyPoint()
+        pyorb_kpt.pt = cv16.Point2f(cv2_kpt.pt[0], cv2_kpt.pt[1])
         pyorb_kpt.angle = cv2_kpt.angle
         pyorb_kpt.octave = cv2_kpt.octave
         pyorb_kpt.class_id = cv2_kpt.class_id
@@ -104,7 +78,7 @@ def test_kpts_conversion(pyorb_kpts):
 
     pyorb_kpts = cv2_kpts_to_pyorb_kpts(cv2_kpts)
     assert len(cv2_kpts) == len(pyorb_kpts), neq_error("len(kpts)", "len(pyorb_kpts)")
-    assert isinstance(pyorb_kpts[0], pyORB16.KeyPoint), noninstance_error("pyorb_kpts[0]", "pyORB16.KeyPoint")
+    assert isinstance(pyorb_kpts[0], cv16.KeyPoint), noninstance_error("pyorb_kpts[0]", "cv16.KeyPoint")
     
     cv2_kpts = pyorb_kpts_to_cv2_kpts(pyorb_kpts)
     assert len(cv2_kpts) == len(pyorb_kpts), neq_error("len(kpts)", "len(pyorb_kpts)")
@@ -115,11 +89,11 @@ def test_kpts_conversion(pyorb_kpts):
 
 
 if __name__ == "__main__":
-    ## test pyORB16 (16-bit version)
+    ## test cv16 (16-bit version)
     img16 = cv2.imread("assets/tir.png", -1)
     img8 = normalize_minmax(img16)
     mask16 = np.zeros(img16.shape, dtype=np.uint8)
-    orb16 = pyORB16.ORB16_create(nfeatures=2000, fastThreshold=40)
+    orb16 = cv16.ORB16_create(nfeatures=2000, fastThreshold=40)
 
     test_detect_and_compute(orb16, img16, mask=mask16)
     kpts, descs = test_detect_and_compute(orb16, img16, mask=None)
@@ -157,26 +131,29 @@ if __name__ == "__main__":
             text += ", fastThr=" + str(fast_thr)
         return text
 
-    orb16_20 = pyORB16.ORB16_create(nfeatures=2000, fastThreshold=20)
-    orb16_40 = pyORB16.ORB16_create(nfeatures=2000, fastThreshold=40)
+    orb16_20 = cv16.ORB16_create(nfeatures=2000, fastThreshold=20)
+    orb16_40 = cv16.ORB16_create(nfeatures=2000, fastThreshold=40)
     orb8_20 = cv2.ORB_create(nfeatures=2000, fastThreshold=20)
 
     kpts16_20 = orb16_20.detect(img16, None)
     cv2_kpts16_20 = pyorb_kpts_to_cv2_kpts(kpts16_20)
     kpts16_20_num = len(kpts16_20)
     img16_20_kpts = drawKeypoints(img8, cv2_kpts16_20)
-    cv2.putText(img16_20_kpts, getText(16, kpts16_20_num, 20), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+    cv2.putText(img16_20_kpts, getText(16, kpts16_20_num, 20), (10, 30), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
     kpts16_40 = orb16_40.detect(img16, None)
     cv2_kpts16_40 = pyorb_kpts_to_cv2_kpts(kpts16_40)
     kpts16_40_num = len(kpts16_40)
     img16_40_kpts = drawKeypoints(img8, cv2_kpts16_40)
-    cv2.putText(img16_40_kpts, getText(16, kpts16_40_num, 40), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+    cv2.putText(img16_40_kpts, getText(16, kpts16_40_num, 40), (10, 30), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
     kpts8 = orb8.detect(img8, None)
     kpts8_num = len(kpts8)
     img8_kpts = drawKeypoints(img8, kpts8)
-    cv2.putText(img8_kpts, getText(8, kpts8_num), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+    cv2.putText(img8_kpts, getText(8, kpts8_num), (10, 30), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
     concat = cv2.hconcat([img16_20_kpts, img16_40_kpts, img8_kpts])
     cv2.imshow("keypoints", concat)
