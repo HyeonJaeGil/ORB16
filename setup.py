@@ -14,6 +14,11 @@ import shutil
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
+# parse requirements.txt in python folder
+root = Path(__file__).parent
+with open(str(root / 'python' / 'requirements.txt'), 'r') as f:
+    dependencies = f.read().split('\n')
+
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
     "win32": "Win32",
@@ -153,6 +158,7 @@ setup(
     author_email="now9728@gmail.com",
     description="Pybind wrapper for 16-bit ORB feature",
     long_description="",
+    install_requires=dependencies,
     ext_modules=[CMakeExtension("cv16")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
