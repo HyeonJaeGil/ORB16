@@ -7,5 +7,5 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
 )
 
-pybind11_add_module(pyORB16 pyORB16.cc)
-target_link_libraries(pyORB16 PRIVATE ORB16)
+pybind11_add_module(cv16 cv16.cc)
+target_link_libraries(cv16 PRIVATE ORB16)

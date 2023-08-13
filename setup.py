@@ -147,13 +147,13 @@ class CMakeBuild(build_ext):
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
-    name="pyORB16",
+    name="cv16",
     version="0.0.0",
     author="Hyeonjae Gil",
     author_email="now9728@gmail.com",
     description="Pybind wrapper for 16-bit ORB feature",
     long_description="",
-    ext_modules=[CMakeExtension("pyORB16")],
+    ext_modules=[CMakeExtension("cv16")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     python_requires=">=3.7",
