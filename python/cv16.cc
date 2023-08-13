@@ -1,4 +1,5 @@
 #include "ORB16.h"
+#include "canny16.h"
 #include "fast16.h"
 #include <opencv2/opencv.hpp>
 #include <pybind11/numpy.h>
@@ -208,4 +209,31 @@ PYBIND11_MODULE(cv16, m) {
         py::arg("nonmaxSuppression") = true,
         py::arg("type") = cv::FastFeatureDetector16::DetectorType::TYPE_9_16);
 
+  m.def(
+      "Canny16",
+      [](py::array_t<uint16_t> py_array, double threshold1, double threshold2, int apertureSize = 3,
+         bool L2gradient = false) {
+        cv::Mat image = toMat<uint16_t>(py_array);
+        cv::Mat edges;
+        cv::Canny16(image, edges, threshold1, threshold2, apertureSize, L2gradient);
+        py::array_t<uint8_t> py_edges_out = toArray<uint8_t>(edges);
+        return py_edges_out;
+      },
+      py::arg("image"), py::arg("threshold1"), py::arg("threshold2"), py::arg("apertureSize") = 3,
+      py::arg("L2gradient") = false);
+
+  // define overloaded function of Canny16
+  m.def(
+      "Canny16",
+      [](py::array_t<double> py_dx, py::array_t<double> py_dy, double threshold1, double threshold2,
+         bool L2gradient = false) {
+        cv::Mat dx = toMat<double>(py_dx);
+        cv::Mat dy = toMat<double>(py_dy);
+        cv::Mat edges;
+        cv::Canny16(dx, dy, edges, threshold1, threshold2, L2gradient);
+        py::array_t<uint8_t> py_edges_out = toArray<uint8_t>(edges);
+        return py_edges_out;
+      },
+      py::arg("dx"), py::arg("dy"), py::arg("threshold1"), py::arg("threshold2"),
+      py::arg("L2gradient") = false);
 }
