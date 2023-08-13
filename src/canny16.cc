@@ -50,11 +50,11 @@ public:
     CV_DbgAssert(cn > 0);
 
     Mat dx, dy;
-    AutoBuffer<short> dxMax(0), dyMax(0);
+    AutoBuffer<double> dxMax(0), dyMax(0);
     std::deque<uchar *> stack, borderPeaksLocal;
     const int rowStart = max(0, boundaries.start - 1), rowEnd = min(src.rows, boundaries.end + 1);
     int *_mag_p, *_mag_a, *_mag_n;
-    short *_dx, *_dy, *_dx_a = NULL, *_dy_a = NULL, *_dx_n = NULL, *_dy_n = NULL;
+    double *_dx, *_dy, *_dx_a = NULL, *_dy_a = NULL, *_dx_n = NULL, *_dy_n = NULL;
     uchar *_pmap;
     double scale = 1.0;
 
@@ -63,9 +63,9 @@ public:
       if (aperture_size == 7) {
         scale = 1 / 16.0;
       }
-      Sobel(src.rowRange(rowStart, rowEnd), dx, CV_16S, 1, 0, aperture_size, scale, 0,
+      Sobel(src.rowRange(rowStart, rowEnd), dx, CV_64F, 1, 0, aperture_size, scale, 0,
             BORDER_REPLICATE);
-      Sobel(src.rowRange(rowStart, rowEnd), dy, CV_16S, 0, 1, aperture_size, scale, 0,
+      Sobel(src.rowRange(rowStart, rowEnd), dy, CV_64F, 0, 1, aperture_size, scale, 0,
             BORDER_REPLICATE);
     } else {
       dx = src.rowRange(rowStart, rowEnd);
@@ -109,8 +109,8 @@ public:
 
       if (i < rowEnd) {
         // Next row calculation
-        _dx = dx.ptr<short>(i - rowStart);
-        _dy = dy.ptr<short>(i - rowStart);
+        _dx = dx.ptr<double>(i - rowStart);
+        _dy = dy.ptr<double>(i - rowStart);
 
         if (L2gradient) {
           int j = 0, width = src.cols * cn;
@@ -162,8 +162,8 @@ public:
       _pmap[src.cols] = _pmap[-1] = 1;
 
       if (cn == 1) {
-        _dx = dx.ptr<short>(i - rowStart - 1);
-        _dy = dy.ptr<short>(i - rowStart - 1);
+        _dx = dx.ptr<double>(i - rowStart - 1);
+        _dy = dy.ptr<double>(i - rowStart - 1);
       } else {
         _dx = _dx_a;
         _dy = _dy_a;
@@ -176,8 +176,8 @@ public:
         int m = _mag_a[j];
 
         if (m > low) {
-          short xs = _dx[j];
-          short ys = _dy[j];
+          double xs = _dx[j];
+          double ys = _dy[j];
           int x = (int)std::abs(xs);
           int y = (int)std::abs(ys) << 15;
 
@@ -196,7 +196,7 @@ public:
                 continue;
               }
             } else {
-              int s = (xs ^ ys) < 0 ? -1 : 1;
+              int s = ((xs < 0) != (ys < 0)) ? -1 : 1;
               if (m > _mag_p[j - s] && m > _mag_n[j + s]) {
                 CANNY_CHECK(m, high, (_pmap + j), stack);
                 continue;
@@ -304,13 +304,13 @@ private:
 
 void Canny16(InputArray _src, OutputArray _dst, double low_thresh, double high_thresh,
              int aperture_size, bool L2gradient) {
-  CV_Assert(_src.depth() == CV_8U);
+  //   CV_Assert(_src.depth() == CV_8U);
 
   const Size size = _src.size();
 
-  // we don't support inplace parameters in case with RGB/BGR src
-  CV_Assert((_dst.getObj() != _src.getObj() || _src.type() == CV_8UC1) &&
-            "Inplace parameters are not supported");
+  //   // we don't support inplace parameters in case with RGB/BGR src
+  //   CV_Assert((_dst.getObj() != _src.getObj() || _src.type() == CV_8UC1) &&
+  //             "Inplace parameters are not supported");
 
   _dst.create(size, CV_8U);
 
@@ -335,8 +335,8 @@ void Canny16(InputArray _src, OutputArray _dst, double low_thresh, double high_t
   Mat src(src0.size(), src0.type(), src0.data, src0.step);
 
   if (L2gradient) {
-    low_thresh = std::min(32767.0, low_thresh);
-    high_thresh = std::min(32767.0, high_thresh);
+    low_thresh = std::min(2147483647.0, low_thresh);
+    high_thresh = std::min(2147483647.0, high_thresh);
 
     if (low_thresh > 0)
       low_thresh *= low_thresh;
@@ -395,7 +395,7 @@ void Canny16(InputArray _src, OutputArray _dst, double low_thresh, double high_t
 void Canny16(InputArray _dx, InputArray _dy, OutputArray _dst, double low_thresh,
              double high_thresh, bool L2gradient) {
   CV_Assert(_dx.dims() == 2);
-  CV_Assert(_dx.type() == CV_16SC1 || _dx.type() == CV_16SC3);
+  CV_Assert(_dx.type() == CV_64FC1 || _dx.type() == CV_64FC3);
   CV_Assert(_dy.type() == _dx.type());
   CV_Assert(_dx.sameSize(_dy));
 
@@ -411,8 +411,8 @@ void Canny16(InputArray _dx, InputArray _dy, OutputArray _dst, double low_thresh
   Mat dy = _dy.getMat();
 
   if (L2gradient) {
-    low_thresh = std::min(32767.0, low_thresh);
-    high_thresh = std::min(32767.0, high_thresh);
+    low_thresh = std::min(2147483647.0, low_thresh);
+    high_thresh = std::min(2147483647.0, high_thresh);
 
     if (low_thresh > 0)
       low_thresh *= low_thresh;
