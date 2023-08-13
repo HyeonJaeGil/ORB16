@@ -27,6 +27,7 @@ include_directories(
 set(SOURCE
 src/ORB16.cc
 src/fast16.cc
+src/canny16.cc
     )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE})
@@ -44,6 +45,9 @@ IF(BUILD_TEST)
 
     add_executable(test_detection src/test_detection.cc)
     target_link_libraries(test_detection ${PROJECT_NAME})
+
+    add_executable(test_canny16 src/test_canny16.cc)
+    target_link_libraries(test_canny16 ${PROJECT_NAME})
 ENDIF(BUILD_TEST)
 
 IF(BUILD_PYTHON)
