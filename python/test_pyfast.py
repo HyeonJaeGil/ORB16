@@ -1,13 +1,8 @@
-import pyORB16
+import cv16
 import cv2
 import numpy as np
-from termcolor import colored, cprint
-from test_pyorb import (zero_length_error, nonzero_length_error, none_error,
-                        notnone_error, neq_error, noninstance_error,
-                        normalize_minmax, pyorb_kpts_to_cv2_kpts,
-                        cv2_kpts_to_pyorb_kpts,
-                        test_detect, test_kpts_conversion)
-
+from test_utils import *
+from test_pyorb import test_detect, test_kpts_conversion
 
 
 if __name__ == "__main__":
@@ -15,7 +10,7 @@ if __name__ == "__main__":
     img16 = cv2.imread("assets/tir.png", -1)
     img8 = normalize_minmax(img16)
     mask16 = np.zeros(img16.shape, dtype=np.uint8)
-    fast16 = pyORB16.FastFeatureDetector16_create(threshold=40)
+    fast16 = cv16.FastFeatureDetector16_create(threshold=40)
 
     test_detect(fast16, img16, mask=mask16)
     kpts = test_detect(fast16, img16, mask=None)

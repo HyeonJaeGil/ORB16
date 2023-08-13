@@ -1,5 +1,5 @@
-#include "fast16.h"
 #include "ORB16.h"
+#include "fast16.h"
 #include <opencv2/opencv.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -7,23 +7,22 @@
 
 namespace py = pybind11;
 
-int toOpenCVType(const py::dtype &dtype) {
-  if (dtype.is(py::dtype::of<uint8_t>()))
-    return CV_8UC1;
-  else if (dtype.is(py::dtype::of<uint16_t>()))
-    return CV_16UC1;
-  else if (dtype.is(py::dtype::of<float>()))
-    return CV_32FC1;
-  else if (dtype.is(py::dtype::of<double>()))
-    return CV_64FC1;
-  else
+std::map<std::string, int> type_map = {{"uint8", CV_8UC1},
+                                       {"uint16", CV_16UC1},
+                                       {"int16", CV_16SC1},
+                                       {"float32", CV_32FC1},
+                                       {"float64", CV_64FC1}};
+
+int toOpenCVType(const std::string &dtype) {
+  if (type_map.count(dtype) == 0)
     throw std::runtime_error("Unsupported type passed to toMat");
+  return type_map[dtype];
 }
 
 template <typename T> cv::Mat toMat(const py::array_t<T> &input) {
   if (input.ndim() != 2)
     throw std::runtime_error("Number of dimensions must be two");
-  int type = toOpenCVType(input.dtype());
+  int type = toOpenCVType(input.dtype().str());
   auto buf = input.request();
   cv::Mat mat(buf.shape[0], buf.shape[1], type, (void *)buf.ptr);
   return mat;
@@ -84,8 +83,8 @@ FastFeatureDetector16_create(int threshold, bool nonmaxSuppression,
                                    (cv::FastFeatureDetector16::DetectorType)type);
 }
 
-PYBIND11_MODULE(pyORB16, m) {
-  m.doc() = "ORB16 class implementation"; // Optional module docstring
+PYBIND11_MODULE(cv16, m) {
+  m.doc() = "cv16 class implementation"; // Optional module docstring
 
   py::class_<cv::KeyPoint>(m, "KeyPoint", py::dynamic_attr())
       .def(py::init<>())
@@ -138,8 +137,8 @@ PYBIND11_MODULE(pyORB16, m) {
             std::vector<cv::KeyPoint> keypoints;
             cv::Mat image = toMat<uint16_t>(py_array);
             cv::Mat mask = py::isinstance<py::none>(py_mask) ?
-                            cv::Mat() :
-                            toMat<uint8_t>(py_mask.cast<py::array_t<uint8_t>>());
+                               cv::Mat() :
+                               toMat<uint8_t>(py_mask.cast<py::array_t<uint8_t>>());
             self.detect(image, keypoints, mask);
             return keypoints;
           },
@@ -161,8 +160,8 @@ PYBIND11_MODULE(pyORB16, m) {
             cv::Mat descriptors;
             cv::Mat image = toMat<uint16_t>(py_array);
             cv::Mat mask = py::isinstance<py::none>(py_mask) ?
-                            cv::Mat() :
-                            toMat<uint8_t>(py_mask.cast<py::array_t<uint8_t>>());
+                               cv::Mat() :
+                               toMat<uint8_t>(py_mask.cast<py::array_t<uint8_t>>());
             self.detectAndCompute(image, mask, keypoints, descriptors);
             py::array_t<uint8_t> py_descriptors = toArray<uint8_t>(descriptors);
             return std::make_tuple(keypoints, py_descriptors);
