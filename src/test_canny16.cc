@@ -10,12 +10,17 @@ using namespace cv;
 int main(int argc, char **argv) {
 
   // load images from assets
-  Mat img = imread("../assets/lena.png", IMREAD_GRAYSCALE);
   Mat img16 = imread("../assets/tir.png", IMREAD_UNCHANGED);
+
+  // normalize img with min max value
+  double min, max;
+  Mat img8 = img16.clone();
+  cv::minMaxLoc(img8, &min, &max);
+  img16.convertTo(img8, CV_8UC1, 255.0 / (max - min), -min * 255.0 / (max - min));
 
   // detect Canny edges
   cv::Mat edges;
-  cv::Canny16(img, edges, 50, 100);
+  cv::Canny16(img8, edges, 50, 100);
 
   // detect Canny edges on 16bit image
   cv::Mat edges16;
