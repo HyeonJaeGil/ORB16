@@ -2,6 +2,9 @@
 #include "fast16.h"
 #include <iostream>
 #include <opencv2/features2d.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace cv;
 
@@ -31,8 +34,7 @@ std::string int8UArrayToBinaryString(uint8_t *values, int size) {
 bool testDetection(const Mat &img, const Mat &img8) {
 
   // detect orb 16bit
-  auto orb16 =
-      ORB16::create(500, 1.2f, 8, 31, 0, 2, ORB16::HARRIS_SCORE, 31, 20);
+  auto orb16 = ORB16::create(500, 1.2f, 8, 31, 0, 2, ORB16::HARRIS_SCORE, 31, 20);
   auto orb8 = ORB::create(500, 1.2f, 8, 31, 0, 2, ORB::HARRIS_SCORE, 31, 20);
   std::vector<KeyPoint> keypoints_16;
   orb16->detect(img, keypoints_16);
@@ -56,10 +58,8 @@ bool testDetection(const Mat &img, const Mat &img8) {
   return true;
 }
 
-bool testDescription(const Mat &img, const Mat &img8,
-                     std::vector<KeyPoint> keypoints) {
-  auto orb16 =
-      ORB16::create(500, 1.2f, 8, 31, 0, 2, ORB16::HARRIS_SCORE, 31, 20);
+bool testDescription(const Mat &img, const Mat &img8, std::vector<KeyPoint> keypoints) {
+  auto orb16 = ORB16::create(500, 1.2f, 8, 31, 0, 2, ORB16::HARRIS_SCORE, 31, 20);
   auto orb8 = ORB::create(500, 1.2f, 8, 31, 0, 2, ORB::HARRIS_SCORE, 31, 20);
 
   if (keypoints.empty()) {
@@ -73,7 +73,6 @@ bool testDescription(const Mat &img, const Mat &img8,
   orb16->compute(img, keypoints, descriptors_16);
   auto binary16 = int8UArrayToBinaryString(descriptors_16.data, descriptors_16.cols);
   std::cout << "descriptor (orb16): \n" << binary16 << std::endl;
-
 
   Mat descriptors_8;
   orb8->compute(img8, keypoints, descriptors_8);

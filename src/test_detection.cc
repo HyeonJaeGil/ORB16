@@ -1,6 +1,9 @@
 #include "ORB16.h"
 #include "fast16.h"
 #include <iostream>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace cv;
 
@@ -30,8 +33,7 @@ int main(int argc, char **argv) {
   ////////////////////////////////////////////////////////////////////////////
 
   // detection with fast detector 16bit, half size
-  auto fast16 =
-      FastFeatureDetector16::create(40, true, FastFeatureDetector16::TYPE_9_16);
+  auto fast16 = FastFeatureDetector16::create(40, true, FastFeatureDetector16::TYPE_9_16);
   std::vector<KeyPoint> keypoints_16_half;
   fast16->detect(img_half, keypoints_16_half);
   resizeKepoints(keypoints_16_half, 2.0); // half size compensation
@@ -63,20 +65,24 @@ int main(int argc, char **argv) {
   drawKeypoints(img8, keypoints_16, img_keypoints_16);
   drawKeypoints(img8, keypoints_8_half, img_keypoints_8_half);
   drawKeypoints(img8, keypoints_8, img_keypoints_8);
-  putText(img_keypoints_16_half, "fast 16bit (half) :"+std::to_string(keypoints_16_half.size()), Point(10, 30),
+  putText(img_keypoints_16_half, "fast 16bit (half) :" + std::to_string(keypoints_16_half.size()),
+          Point(10, 30), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255, 255, 255), 2);
+  putText(img_keypoints_16, "fast 16bit :" + std::to_string(keypoints_16.size()), Point(10, 30),
           FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255, 255, 255), 2);
-  putText(img_keypoints_16, "fast 16bit :"+std::to_string(keypoints_16.size()), Point(10, 30), FONT_HERSHEY_SIMPLEX,
-          0.7, Scalar(255, 255, 255), 2);
-  putText(img_keypoints_8_half, "fast 8bit (half) :" + std::to_string(keypoints_8_half.size()), Point(10, 30),
+  putText(img_keypoints_8_half, "fast 8bit (half) :" + std::to_string(keypoints_8_half.size()),
+          Point(10, 30), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255, 255, 255), 2);
+  putText(img_keypoints_8, "fast 8bit :" + std::to_string(keypoints_8.size()), Point(10, 30),
           FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255, 255, 255), 2);
-  putText(img_keypoints_8, "fast 8bit :" + std::to_string(keypoints_8.size()), Point(10, 30), FONT_HERSHEY_SIMPLEX,
-          0.7, Scalar(255, 255, 255), 2);
-  
+
   Mat concat = Mat::zeros(img_keypoints_16_half.rows * 2, img_keypoints_16_half.cols * 2, CV_8UC3);
-  img_keypoints_16_half.copyTo(concat(Rect(0, 0, img_keypoints_16_half.cols, img_keypoints_16_half.rows)));
-  img_keypoints_16.copyTo(concat(Rect(img_keypoints_16_half.cols, 0, img_keypoints_16.cols, img_keypoints_16.rows)));
-  img_keypoints_8_half.copyTo(concat(Rect(0, img_keypoints_16_half.rows, img_keypoints_8_half.cols, img_keypoints_8_half.rows)));
-  img_keypoints_8.copyTo(concat(Rect(img_keypoints_16_half.cols, img_keypoints_16_half.rows, img_keypoints_8.cols, img_keypoints_8.rows)));
+  img_keypoints_16_half.copyTo(
+      concat(Rect(0, 0, img_keypoints_16_half.cols, img_keypoints_16_half.rows)));
+  img_keypoints_16.copyTo(
+      concat(Rect(img_keypoints_16_half.cols, 0, img_keypoints_16.cols, img_keypoints_16.rows)));
+  img_keypoints_8_half.copyTo(concat(
+      Rect(0, img_keypoints_16_half.rows, img_keypoints_8_half.cols, img_keypoints_8_half.rows)));
+  img_keypoints_8.copyTo(concat(Rect(img_keypoints_16_half.cols, img_keypoints_16_half.rows,
+                                     img_keypoints_8.cols, img_keypoints_8.rows)));
 
   imshow("concat", concat);
 

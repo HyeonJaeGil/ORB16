@@ -42,11 +42,10 @@ The references are:
 */
 
 #pragma once
-#include <opencv2/opencv.hpp>
+#include <algorithm>
+#include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/core/utility.hpp>
-#include <algorithm>
 
 namespace cv {
 
@@ -57,13 +56,11 @@ public:
 
   FastFeatureDetector16(int _threshold, bool _nonmaxSuppression,
                         FastFeatureDetector16::DetectorType _type)
-      : threshold(_threshold), nonmaxSuppression(_nonmaxSuppression),
-        type(_type) {}
+      : threshold(_threshold), nonmaxSuppression(_nonmaxSuppression), type(_type) {}
 
   static Ptr<FastFeatureDetector16>
   create(int threshold = 10, bool nonmaxSuppression = true,
-         FastFeatureDetector16::DetectorType type =
-             FastFeatureDetector16::TYPE_9_16) {
+         FastFeatureDetector16::DetectorType type = FastFeatureDetector16::TYPE_9_16) {
     return makePtr<FastFeatureDetector16>(threshold, nonmaxSuppression, type);
   }
 
@@ -73,8 +70,7 @@ public:
   void FAST(InputArray _img, std::vector<KeyPoint> &keypoints, int threshold,
             bool nonmax_suppression);
 
-  void detect(InputArray _image, std::vector<KeyPoint> &keypoints,
-              InputArray _mask = noArray());
+  void detect(InputArray _image, std::vector<KeyPoint> &keypoints, InputArray _mask = noArray());
 
   void set(int prop, double value);
 
