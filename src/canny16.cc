@@ -321,8 +321,11 @@ void Canny16(InputArray _src, OutputArray _dst, double low_thresh, double high_t
   }
 
   if ((aperture_size & 1) == 0 || (aperture_size != -1 && (aperture_size < 3 || aperture_size > 7)))
+#if CV_MAJOR_VERSION >= 4
+    CV_Error(Error::StsBadFlag, "Aperture size should be odd between 3 and 7");
+#else
     CV_Error(CV_StsBadFlag, "Aperture size should be odd between 3 and 7");
-
+#endif
   if (aperture_size == 7) {
     low_thresh = low_thresh / 16.0;
     high_thresh = high_thresh / 16.0;
