@@ -73,7 +73,7 @@ class CMakeBuild(build_ext):
         build_args = []
 
         # set BUILD_PYBIND to ON to build pybind11
-        cmake_args += [f"-DBUILD_PYBIND=ON"]
+        cmake_args += [f"-DBUILD_PYTHON=ON -DBUILD_TEST=OFF"]
 
         # Adding CMake arguments set as environment variable
         # (needed e.g. to build for ARM OSx on conda-forge)
@@ -139,8 +139,6 @@ class CMakeBuild(build_ext):
         build_temp = Path(self.build_temp) / ext.name
         if not build_temp.exists():
             build_temp.mkdir(parents=True)
-
-        cmake_args += [f"-DBUILD_PYTHON=ON"]
 
         subprocess.run(
             ["cmake", ext.sourcedir, *cmake_args], cwd=build_temp, check=True

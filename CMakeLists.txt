@@ -33,7 +33,7 @@ src/canny16.cc
 add_library(${PROJECT_NAME} SHARED ${SOURCE})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
-option(BUILD_TEST "Build test" ON)
+option(BUILD_TEST "Build test" OFF)
 option(BUILD_PYTHON "Build pybind" OFF)
 
 IF(BUILD_TEST)
